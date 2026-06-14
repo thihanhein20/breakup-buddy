@@ -1,20 +1,22 @@
 // app/journal/page.tsx
-// Guided Journal with rotating prompts + Heart to Heart AI companion
-// SDG 3: Good Health & Well-being — emotional processing for teens
+// Guided Journal — SDG 3: Good Health & Well-being
 
 "use client";
 
-import { useState } from "react";
-import Card from "../components/Card";
-import HeartToHeart from "../components/HeartToHeart";
+import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPaperPlane,
   faLock,
   faCheck,
 } from "@fortawesome/free-solid-svg-icons";
+import JournalPrompt from "./components/JournalPrompt";
+import JournalEditor from "./components/JournalEditor";
+import JournalEntries from "./components/JournalEntries";
+import HeartToHeart from "../components/HeartToHeart";
+import { saveJournalEntry, getJournalEntries } from "..//lib/data";
 import { getTodayPrompt } from "../lib/prompts";
-import { saveJournalEntry } from "../lib/data";
+import type { JournalEntry } from "../lib/types";
 
 export default function JournalPage() {
   const prompt = getTodayPrompt();
@@ -23,9 +25,17 @@ export default function JournalPage() {
   const [aiLoading, setAiLoading] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
   const [saved, setSaved] = useState<boolean>(false);
+  const [entries, setEntries] = useState<JournalEntry[]>([]);
+  const [entriesLoading, setEntriesLoading] = useState<boolean>(true);
 
-  const wordCount = entry.trim().split(/\s+/).filter(Boolean).length;
   const ready = entry.trim().length >= 20;
+
+  useEffect(() => {
+    getJournalEntries(10)
+      .then(setEntries)
+      .catch(console.error)
+      .finally(() => setEntriesLoading(false));
+  }, [saved]);
 
   async function handleSubmit() {
     if (!ready) return;
@@ -55,9 +65,9 @@ export default function JournalPage() {
   }
 
   return (
-    <div className="fade-up" style={{ maxWidth: 720, margin: "0 auto" }}>
+    <div className="fade-up" style={{ maxWidth: 1100, margin: "0 auto" }}>
       {/* Header */}
-      <div style={{ marginBottom: 32 }}>
+      <div style={{ marginBottom: 28 }}>
         <p
           style={{
             fontSize: 11,
@@ -72,7 +82,7 @@ export default function JournalPage() {
         </p>
         <h1
           style={{
-            fontSize: 28,
+            fontSize: 26,
             fontWeight: 700,
             color: "#1C1917",
             margin: 0,
@@ -86,153 +96,93 @@ export default function JournalPage() {
         </p>
       </div>
 
-      {/* Today's prompt */}
+      {/* Two-column layout */}
       <div
-        style={{
-          borderRadius: "1.25rem",
-          padding: "20px 24px",
-          background: "rgba(232, 114, 106, 0.06)",
-          border: "1.5px solid rgba(232, 114, 106, 0.18)",
-          marginBottom: 16,
-        }}
+        style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16 }}
       >
-        <p
-          style={{
-            fontSize: 11,
-            fontWeight: 700,
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            color: "#E8726A",
-            margin: "0 0 10px",
-          }}
-        >
-          Today's prompt
-        </p>
-        <p
-          style={{
-            fontSize: 16,
-            fontWeight: 500,
-            lineHeight: 1.65,
-            color: "#1C1917",
-            margin: 0,
-          }}
-        >
-          {prompt}
-        </p>
-      </div>
+        {/* Left — writing area */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <JournalPrompt prompt={prompt} />
+          <JournalEditor entry={entry} onChange={setEntry} />
+          <HeartToHeart response={aiResponse} loading={aiLoading} />
 
-      {/* Writing area */}
-      <Card style={{ marginBottom: 16 }}>
-        <textarea
-          rows={12}
-          value={entry}
-          onChange={(e) => setEntry(e.target.value)}
-          placeholder="Start writing… there's no wrong way to do this."
-          style={{
-            width: "100%",
-            background: "transparent",
-            border: "none",
-            fontSize: 15,
-            lineHeight: 1.75,
-            color: "#1C1917",
-            fontFamily: "Inter, sans-serif",
-            resize: "none",
-            outline: "none",
-          }}
-        />
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            paddingTop: 12,
-            borderTop: "1px solid #F5F0EA",
-            marginTop: 8,
-          }}
-        >
-          <span style={{ fontSize: 12, color: "#A8A29E" }}>
-            {wordCount} words
-          </span>
-          <span style={{ fontSize: 12, color: ready ? "#7BAE8E" : "#A8A29E" }}>
-            {ready
-              ? "✓ Ready for AI response"
-              : `${20 - entry.length} more characters to unlock`}
-          </span>
+          {/* Save button */}
+          {saved ? (
+            <div
+              className="fade-up"
+              style={{
+                width: "100%",
+                padding: "14px",
+                borderRadius: "1rem",
+                background: "rgba(123, 174, 142, 0.12)",
+                color: "#7BAE8E",
+                fontSize: 15,
+                fontWeight: 600,
+                textAlign: "center",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+              }}
+            >
+              <FontAwesomeIcon
+                icon={faCheck}
+                style={{ width: 14, height: 14 }}
+              />
+              Entry saved
+            </div>
+          ) : (
+            <button
+              onClick={handleSubmit}
+              disabled={!ready || saving}
+              style={{
+                width: "100%",
+                padding: "14px",
+                borderRadius: "1rem",
+                border: "none",
+                background: ready ? "#E8726A" : "#E8E0D5",
+                color: ready ? "white" : "#A8A29E",
+                fontSize: 15,
+                fontWeight: 600,
+                cursor: ready ? "pointer" : "not-allowed",
+                transition: "all 0.18s",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+              }}
+            >
+              <FontAwesomeIcon
+                icon={faPaperPlane}
+                style={{ width: 14, height: 14 }}
+              />
+              {saving
+                ? "Saving & thinking…"
+                : "Save + get Heart to Heart response"}
+            </button>
+          )}
+
+          {/* Privacy note */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+            }}
+          >
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{ width: 11, height: 11, color: "#A8A29E" }}
+            />
+            <p style={{ fontSize: 12, color: "#A8A29E", margin: 0 }}>
+              Anonymous & private — only you can see this
+            </p>
+          </div>
         </div>
-      </Card>
 
-      {/* Heart to Heart AI response */}
-      <HeartToHeart response={aiResponse} loading={aiLoading} />
-
-      {/* Save button */}
-      {!saved ? (
-        <button
-          onClick={handleSubmit}
-          disabled={!ready || saving}
-          style={{
-            width: "100%",
-            padding: "14px",
-            borderRadius: "1rem",
-            border: "none",
-            background: ready ? "#E8726A" : "#E8E0D5",
-            color: ready ? "white" : "#A8A29E",
-            fontSize: 15,
-            fontWeight: 600,
-            cursor: ready ? "pointer" : "not-allowed",
-            transition: "all 0.18s",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-            marginTop: 16,
-          }}
-        >
-          <FontAwesomeIcon
-            icon={faPaperPlane}
-            style={{ width: 14, height: 14 }}
-          />
-          {saving ? "Saving & thinking…" : "Save + get Heart to Heart response"}
-        </button>
-      ) : (
-        <div
-          style={{
-            width: "100%",
-            padding: "14px",
-            borderRadius: "1rem",
-            background: "rgba(123, 174, 142, 0.12)",
-            color: "#7BAE8E",
-            fontSize: 15,
-            fontWeight: 600,
-            textAlign: "center",
-            marginTop: 16,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-          }}
-        >
-          <FontAwesomeIcon icon={faCheck} style={{ width: 14, height: 14 }} />
-          Entry saved
-        </div>
-      )}
-
-      {/* Privacy note */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 6,
-          marginTop: 16,
-        }}
-      >
-        <FontAwesomeIcon
-          icon={faLock}
-          style={{ width: 11, height: 11, color: "#A8A29E" }}
-        />
-        <p style={{ fontSize: 12, color: "#A8A29E", margin: 0 }}>
-          Anonymous & private — only you can see this
-        </p>
+        {/* Right — past entries */}
+        <JournalEntries entries={entries} loading={entriesLoading} />
       </div>
     </div>
   );

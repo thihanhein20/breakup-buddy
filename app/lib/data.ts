@@ -36,6 +36,30 @@ export async function getMoodLogs(limit = 30): Promise<MoodLog[]> {
   return data;
 }
 
+/**
+ * Returns minutes remaining until user can log again.
+ * Returns 0 if they are free to log now.
+ */
+export async function getMinutesUntilNextLog(): Promise<number> {
+  const user_id = await getUserId();
+  const { data, error } = await supabase
+    .from("mood_logs")
+    .select("created_at")
+    .eq("user_id", user_id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return 0;
+
+  const last = new Date(data.created_at).getTime();
+  const now = Date.now();
+  const diffMinutes = Math.floor((now - last) / 60000);
+  const cooldown = 60; // 1 hour
+
+  return Math.max(0, cooldown - diffMinutes);
+}
+
 // ─── Journal Entries ──────────────────────────────────────────
 
 export async function saveJournalEntry(payload: {
