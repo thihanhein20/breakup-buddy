@@ -70,7 +70,15 @@ export default function RecentMoods({ logs, loading }: RecentMoodsProps) {
           </p>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+            maxHeight: "60vh",
+            overflow: " auto",
+          }}
+        >
           {logs.map((log) => {
             const mood = moods.find((m) => m.id === log.mood);
             return (

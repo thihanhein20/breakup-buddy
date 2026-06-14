@@ -58,7 +58,16 @@ export default function JournalEntries({
           </p>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            maxHeight: "60vh",
+            overflowY: "auto",
+            paddingRight: 4,
+          }}
+        >
           {entries.map((entry) => (
             <div
               key={entry.id}

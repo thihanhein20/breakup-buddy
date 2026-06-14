@@ -5,12 +5,16 @@
 
 import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck, faChevronRight } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCheck,
+  faChevronRight,
+  faClock,
+} from "@fortawesome/free-solid-svg-icons";
 import MoodPicker from "./components/MoodPicker";
 import IntensitySlider from "./components/IntensitySlider";
 import MoodNote from "./components/MoodNote";
 import MoodHistory from "./components/MoodHistory";
-import { logMood, getMoodLogs } from "../lib/data";
+import { logMood, getMoodLogs, getMinutesUntilNextLog } from "../lib/data";
 import { moods } from "../lib/prompts";
 import type { MoodId, MoodLog } from "../lib/types";
 
@@ -22,22 +26,35 @@ export default function MoodPage() {
   const [saved, setSaved] = useState<boolean>(false);
   const [history, setHistory] = useState<MoodLog[]>([]);
   const [historyLoading, setHistoryLoading] = useState<boolean>(true);
+  const [cooldown, setCooldown] = useState<number>(0);
 
   const selectedMood = moods.find((m) => m.id === selected);
 
   useEffect(() => {
-    getMoodLogs(10)
-      .then(setHistory)
-      .catch(console.error)
-      .finally(() => setHistoryLoading(false));
+    async function init() {
+      try {
+        const [logs, minutes] = await Promise.all([
+          getMoodLogs(10),
+          getMinutesUntilNextLog(),
+        ]);
+        setHistory(logs);
+        setCooldown(minutes);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setHistoryLoading(false);
+      }
+    }
+    init();
   }, [saved]);
 
   async function handleSave() {
-    if (!selected) return;
+    if (!selected || cooldown > 0) return;
     setSaving(true);
     try {
       await logMood({ mood: selected, intensity, note: note || undefined });
       setSaved(true);
+      setCooldown(60);
       setTimeout(() => {
         setSaved(false);
         setSelected(null);
@@ -93,12 +110,16 @@ export default function MoodPage() {
           <IntensitySlider
             intensity={intensity}
             selectedMood={selectedMood}
-            disabled={!selected}
+            disabled={!selected || cooldown > 0}
             onChange={setIntensity}
           />
-          <MoodNote note={note} disabled={!selected} onChange={setNote} />
+          <MoodNote
+            note={note}
+            disabled={!selected || cooldown > 0}
+            onChange={setNote}
+          />
 
-          {/* Save button */}
+          {/* Save / cooldown / success */}
           {saved ? (
             <div
               className="fade-up"
@@ -122,6 +143,31 @@ export default function MoodPage() {
                 style={{ width: 14, height: 14 }}
               />
               Logged. Keep going.
+            </div>
+          ) : cooldown > 0 ? (
+            <div
+              style={{
+                width: "100%",
+                padding: "14px",
+                borderRadius: "1rem",
+                background: "rgba(244, 162, 97, 0.08)",
+                border: "1.5px solid rgba(244, 162, 97, 0.25)",
+                color: "#F4A261",
+                fontSize: 14,
+                fontWeight: 600,
+                textAlign: "center",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+              }}
+            >
+              <FontAwesomeIcon
+                icon={faClock}
+                style={{ width: 14, height: 14 }}
+              />
+              Next check-in available in {cooldown} minute
+              {cooldown !== 1 ? "s" : ""}
             </div>
           ) : (
             <button
