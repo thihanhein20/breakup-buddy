@@ -6,10 +6,10 @@
 import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faChevronRight } from "@fortawesome/free-solid-svg-icons";
-import MoodPicker from "../components/mood/MoodPicker";
-import IntensitySlider from "../components/mood/IntensitySlider";
-import MoodNote from "../components/mood/MoodNote";
-import MoodHistory from "../components/mood/MoodHistory";
+import MoodPicker from "./components/MoodPicker";
+import IntensitySlider from "./components/IntensitySlider";
+import MoodNote from "./components/MoodNote";
+import MoodHistory from "./components/MoodHistory";
 import { logMood, getMoodLogs } from "../lib/data";
 import { moods } from "../lib/prompts";
 import type { MoodId, MoodLog } from "../lib/types";
