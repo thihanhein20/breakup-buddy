@@ -20,7 +20,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 const tabs = [
-  { href: "/", icon: faHome, label: "Home" },
+  { href: "/dashboard", icon: faHome, label: "Home" },
   { href: "/mood", icon: faFaceSmile, label: "Mood" },
   { href: "/journal", icon: faBookOpen, label: "Journal" },
   { href: "/tasks", icon: faListCheck, label: "Tasks" },
