@@ -1,9 +1,9 @@
 // app/layout.tsx
-// Root layout — sidebar, fonts, metadata
+// Root layout — conditionally renders sidebar
 
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import Sidebar from "./components/Sidebar";
+import LayoutWrapper from "./components/LayoutWrapper";
 
 export const metadata: Metadata = {
   title: "BreakUp Buddy",
@@ -25,8 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Sidebar />
-        <div className="page-content">{children}</div>
+        <LayoutWrapper>{children}</LayoutWrapper>
       </body>
     </html>
   );

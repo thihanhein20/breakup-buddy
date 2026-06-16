@@ -1,84 +1,60 @@
 // app/page.tsx
-// Home dashboard — SDG 3: Good Health & Well-being
+// Landing page — entry point for BreakUp Buddy
+// SDG 3: Good Health & Well-being
 
 "use client";
 
-import { useEffect, useState } from "react";
-import { getMoodLogs, getStreak, getCompletedTaskIds } from "./lib/data";
-import {
-  getTodayAffirmation,
-  getTodayQuote,
-  recoveryTasks,
-} from "./lib/prompts";
-import { getOrCreateAnonSession } from "./lib/supabase";
-import type { MoodLog } from "./lib/types";
+import { useEffect, useRef } from "react";
+import LandingNav from "./(landing)/components/LandingNav";
+import HeroSection from "./(landing)/components/HeroSection";
+import FeaturesSection from "./(landing)/components/FeaturesSection";
+import HowItWorks from "./(landing)/components/HowItWorks";
+import SDGSection from "./(landing)/components/SDGSection";
+import FinalCTA from "./(landing)/components/FinalCTA";
+import LandingFooter from "./(landing)/components/LandingFooter";
 
-import HomeHeader from "./components/home/HomeHeader";
-import TodayAffirmation from "./components/home/TodayAffirmation";
-import QuickActions from "./components/home/QuickActions";
-import RecoveryTasksPreview from "./components/home/RecoveryTasksPreview";
-import QuoteCard from "./components/home/QuoteCard";
-import ProgressStats from "./components/home/ProgressStats";
-import RecentMoods from "./components/home/RecentMoods";
-
-export default function Home() {
-  const [streak, setStreak] = useState<number>(0);
-  const [recentLogs, setRecentLogs] = useState<MoodLog[]>([]);
-  const [completedIds, setCompletedIds] = useState<string[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  const affirmation = getTodayAffirmation();
-  const quote = getTodayQuote();
-  const taskProgress = Math.round(
-    (completedIds.length / recoveryTasks.length) * 100,
-  );
+export default function LandingPage() {
+  const blobRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    async function init() {
-      try {
-        await getOrCreateAnonSession();
-        const [s, logs, ids] = await Promise.all([
-          getStreak(),
-          getMoodLogs(5),
-          getCompletedTaskIds(),
-        ]);
-        setStreak(s);
-        setRecentLogs(logs);
-        setCompletedIds(ids);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    init();
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!blobRef.current) return;
+      const x = (e.clientX / window.innerWidth) * 100;
+      const y = (e.clientY / window.innerHeight) * 100;
+      blobRef.current.style.background = `radial-gradient(circle at ${x}% ${y}%, rgba(232,114,106,0.15) 0%, rgba(123,174,142,0.08) 40%, transparent 70%)`;
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   return (
-    <div className="fade-up" style={{ maxWidth: 1100, margin: "0 auto" }}>
-      <HomeHeader streak={streak} loading={loading} />
-
+    <div
+      style={{
+        background: "#1A1512",
+        minHeight: "100vh",
+        color: "#F5F0EA",
+        overflowX: "hidden",
+      }}
+    >
+      {/* Animated background blob */}
       <div
-        style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16 }}
-      >
-        {/* Left column */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <TodayAffirmation affirmation={affirmation} />
-          <QuickActions />
-          <RecoveryTasksPreview completedIds={completedIds} />
-          <QuoteCard quote={quote} />
-        </div>
+        ref={blobRef}
+        style={{
+          position: "fixed",
+          inset: 0,
+          pointerEvents: "none",
+          zIndex: 0,
+          transition: "background 0.3s ease",
+        }}
+      />
 
-        {/* Right column */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <ProgressStats
-            streak={streak}
-            completedCount={completedIds.length}
-            taskProgress={taskProgress}
-          />
-          <RecentMoods logs={recentLogs} loading={loading} />
-        </div>
-      </div>
+      <LandingNav />
+      <HeroSection />
+      <FeaturesSection />
+      <HowItWorks />
+      <SDGSection />
+      <FinalCTA />
+      <LandingFooter />
     </div>
   );
 }
