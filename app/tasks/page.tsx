@@ -15,12 +15,14 @@ import {
 import { recoveryTasks } from "../lib/prompts";
 import { completeTask, getCompletedTaskIds } from "../lib/data";
 import type { RecoveryTask } from "../lib/types";
+import CompletionPopup from "./components/CompletionPopup";
 
 export default function TasksPage() {
   const [completed, setCompleted] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [active, setActive] = useState<string | null>(null);
   const [completing, setCompleting] = useState<string | null>(null);
+  const [completedDay, setCompletedDay] = useState<number | null>(null);
 
   useEffect(() => {
     getCompletedTaskIds()
@@ -29,12 +31,18 @@ export default function TasksPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  async function handleComplete(taskId: string) {
+  async function handleComplete(taskId: string, day: number) {
     if (completed.includes(taskId)) return;
     setCompleting(taskId);
     try {
       await completeTask(taskId);
-      setCompleted((prev) => [...prev, taskId]);
+      const newCompleted = [...completed, taskId];
+      setCompleted(newCompleted);
+
+      // Check if all tasks for this day are now done
+      const dayTasks = recoveryTasks.filter((t) => t.day === day);
+      const allDayDone = dayTasks.every((t) => newCompleted.includes(t.id));
+      if (allDayDone) setCompletedDay(day);
     } catch (e) {
       console.error(e);
     } finally {
@@ -237,7 +245,7 @@ export default function TasksPage() {
                           {task.desc}
                         </p>
                         <button
-                          onClick={() => handleComplete(task.id)}
+                          onClick={() => handleComplete(task.id, task.day)}
                           disabled={isCompleting}
                           style={{
                             padding: "10px 20px",
@@ -269,6 +277,12 @@ export default function TasksPage() {
             </div>
           </div>
         ))
+      )}
+      {completedDay !== null && (
+        <CompletionPopup
+          day={completedDay}
+          onClose={() => setCompletedDay(null)}
+        />
       )}
     </div>
   );
