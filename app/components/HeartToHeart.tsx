@@ -2,6 +2,9 @@
 // AI companion that responds to journal entries with empathy
 // Teens want to be heard, not fixed
 
+import { faHeartPulse } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
 interface HeartToHeartProps {
   response: string | null;
   loading: boolean;
@@ -30,7 +33,9 @@ export default function HeartToHeart({ response, loading }: HeartToHeartProps) {
           marginBottom: 12,
         }}
       >
-        <span style={{ fontSize: 18 }}>🫀</span>
+        <span style={{ fontSize: 18 }}>
+          <FontAwesomeIcon icon={faHeartPulse} />
+        </span>
         <span
           style={{
             fontSize: 11,

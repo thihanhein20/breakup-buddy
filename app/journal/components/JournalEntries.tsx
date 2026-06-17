@@ -3,7 +3,7 @@
 
 import Card from "../../components/Card";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBookOpen } from "@fortawesome/free-solid-svg-icons";
+import { faBookOpen, faHeartPulse } from "@fortawesome/free-solid-svg-icons";
 import type { JournalEntry } from "../../lib/types";
 
 interface JournalEntriesProps {
@@ -138,7 +138,7 @@ export default function JournalEntries({
                     borderRadius: 999,
                   }}
                 >
-                  🫀 Heart to Heart replied
+                  <FontAwesomeIcon icon={faHeartPulse} /> Heart to Heart replied
                 </div>
               )}
             </div>
