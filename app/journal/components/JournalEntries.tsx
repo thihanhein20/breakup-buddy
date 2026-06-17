@@ -63,7 +63,7 @@ export default function JournalEntries({
             display: "flex",
             flexDirection: "column",
             gap: 10,
-            maxHeight: "60vh",
+            maxHeight: "70vh",
             overflowY: "auto",
             paddingRight: 4,
           }}
