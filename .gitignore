@@ -49,3 +49,4 @@ node_modules/
 /playwright/.auth/
 
 /test_imgs
+tests/.auth/
