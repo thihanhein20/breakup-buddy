@@ -13,6 +13,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnon);
  * Returns existing session or creates a new anonymous one.
  * No email, no name — just a UUID. Private by design.
  */
+// app/lib/supabase.ts
 export async function getOrCreateAnonSession() {
   const {
     data: { session },
@@ -20,7 +21,10 @@ export async function getOrCreateAnonSession() {
   if (session) return session;
 
   const { data, error } = await supabase.auth.signInAnonymously();
-  if (error) throw error;
+  if (error) {
+    console.warn("Anon sign-in failed:", error.message);
+    return null; // don't crash — return null and let the app handle it
+  }
   return data.session;
 }
 
