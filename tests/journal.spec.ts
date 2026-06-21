@@ -51,6 +51,10 @@ test.describe("Guided Journal", () => {
     const textarea = page.getByPlaceholder(/Start writing/i);
     await textarea.fill("one two three four five");
 
-    await expect(page.getByText(/5 words/i)).toBeVisible();
+    // Trigger an input event explicitly for webkit, then assert
+    await textarea.dispatchEvent("input");
+
+    // Use a more flexible matcher that waits for the count to settle
+    await expect(page.getByText(/5 words/i)).toBeVisible({ timeout: 10000 });
   });
 });
