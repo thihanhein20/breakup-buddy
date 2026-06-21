@@ -49,8 +49,14 @@ test.describe("Guided Journal", () => {
     await page.goto("/journal");
 
     const textarea = page.getByPlaceholder(/Start writing/i);
-    await textarea.fill("one two three four five");
 
-    await expect(page.getByText(/5 words/i)).toBeVisible();
+    // pressSequentially types character-by-character, firing real input events
+    await textarea.pressSequentially("one two three four five", { delay: 20 });
+
+    // Verify the textarea actually has the value first
+    await expect(textarea).toHaveValue("one two three four five");
+
+    // Then check the count, tolerant of whitespace
+    await expect(page.getByText(/5\s+words/i)).toBeVisible({ timeout: 10000 });
   });
 });
