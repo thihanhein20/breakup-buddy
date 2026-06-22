@@ -1,23 +1,13 @@
 // app/api/heart-to-heart/route.ts
 // AI companion endpoint — empathetic responses to journal entries
-// Server-side only — GEMINI_API_KEY never exposed to client
+// Server-side only — GROQ_API_KEY never exposed to client
 
 import { NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY! });
 
-export async function POST(request: Request) {
-  try {
-    const { entry, prompt } = await request.json();
-
-    if (!entry || entry.trim().length < 5) {
-      return NextResponse.json({ error: "Entry too short" }, { status: 400 });
-    }
-
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash-lite",
-      systemInstruction: `You are Heart to Heart — a compassionate AI companion in BreakUp Buddy, an app for teens recovering from heartbreak.
+const SYSTEM_PROMPT = `You are Heart to Heart — a compassionate AI companion in BreakUp Buddy, an app for teens recovering from heartbreak.
 
 Your ONLY job is to make the person feel heard and less alone. You are NOT a therapist. You do NOT give advice unless gently asked. You do NOT try to fix anything.
 
@@ -28,14 +18,30 @@ Rules:
 - Never say "I understand" or "That must be hard" — be more specific to what they wrote
 - End with one gentle open question or a soft observation — never a directive
 - Tone: like a wise caring older sibling who has been through it
-- Never mention SDG 3 or that you're an AI`,
+- Never mention SDG 3 or that you're an AI`;
+
+export async function POST(request: Request) {
+  try {
+    const { entry, prompt } = await request.json();
+
+    if (!entry || entry.trim().length < 5) {
+      return NextResponse.json({ error: "Entry too short" }, { status: 400 });
+    }
+
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: `Journal prompt: "${prompt}"\n\nWhat I wrote: "${entry}"`,
+        },
+      ],
+      temperature: 0.8,
+      max_tokens: 200,
     });
 
-    const result = await model.generateContent(
-      `Journal prompt: "${prompt}"\n\nWhat I wrote: "${entry}"`,
-    );
-
-    const aiResponse = result.response.text();
+    const aiResponse = completion.choices[0]?.message?.content ?? "";
 
     return NextResponse.json({ response: aiResponse });
   } catch (error) {
